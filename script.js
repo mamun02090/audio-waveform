@@ -21,14 +21,16 @@ const canVasWidth = canvas.offsetWidth || 500
 const intervalTime = 10;
 const timeInput = document.getElementById('time')
 const timer = document.getElementById('timer')
-timeInput.value = 2.04;
+timeInput.value = 2.960;
 let time = timeInput.value;
 let widthContain = 0
 let audioUrl
 let isTalk = false
 const recordedAudioBtn = document.getElementById('recordedAudio');
 const audioPlayerRecorded = document.getElementById('recorded-audio')
-recordedAudioBtn.disabled=true
+recordedAudioBtn.disabled = true
+
+document.getElementById('stopButton').disabled = true;
 // const data = [131, 166, 191, 143, 172, 152, 198, 120, 135, 145, 159, 124, 116, 143, 166, 158, 113, 146, 133, 123, 117, 140, 121, 109, 190, 111, 122, 244, 271, 325, 432, 388, 176, 199, 155, 170, 156, 208, 182, 151, 125, 201, 438, 767, 868, 869, 757, 645, 609, 588, 627, 435, 481, 570, 363, 246, 210, 171, 122, 150, 127, 133, 163, 240, 417, 463, 474, 593, 507, 418, 275, 251, 346, 355, 280, 299, 257, 357, 469, 428, 406, 326, 369, 279, 242, 139, 127, 133, 187, 159, 148, 141, 479, 503, 551, 873, 682, 601, 510, 384, 493, 443, 370, 261, 263, 282, 259, 204, 229, 199, 208, 204, 195, 253, 236, 224, 218, 232, 326, 360, 385, 438, 467, 402, 408, 535, 491, 415, 445, 490, 441, 527, 527, 544, 515, 443, 538, 410, 372, 412, 429, 342, 354, 351, 405, 420, 467, 425, 428, 521, 646, 914, 648, 548, 434, 404, 428, 314, 334, 365, 308, 328, 177, 216, 163, 183, 162, 209, 153, 191, 182, 175, 162, 177, 147, 139, 140, 121, 139, 116, 158, 144, 119, 180, 137, 140, 148, 133, 148, 149, 147, 178, 173, 151, 175, 181, 172, 168, 164, 161, 168, 213, 145, 199, 182, 167, 194, 178, 126, 167, 155, 167, 141, 171, 157, 144, 71]
 
 // console.log(data.length)
@@ -106,9 +108,8 @@ document.getElementById('startButton').addEventListener('click', async () => {
     mediaRecorder.onstop=() => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         audioUrl = URL.createObjectURL(audioBlob);
-        recordedAudioBtn.disabled = false
+        
         audioChunks = []
-        console.log('ass')
     }
     // Start logging and drawing the waveform every 100ms
     intervalId = setInterval(() => {
@@ -126,6 +127,9 @@ document.getElementById('startButton').addEventListener('click', async () => {
             nTime = Date.now();
             timer.innerHTML = nTime - cTime
             mediaRecorder.stop()
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('stopButton').disabled = true;
+            recordedAudioBtn.disabled = false
         }
     }, intervalTime);
     recordingTimerId = setInterval(() => {
@@ -212,7 +216,7 @@ const draw = (normalizedData) => {
 
         if (isTalk) {
             const x = xPos;
-            let height = normalizedData[i] * canvasHeight * 0.3; // Scale to half the canvas height
+            let height = normalizedData[i] * canvasHeight * 0.5; // Scale to half the canvas height
 
             // Use the same drawLineSegment approach for the spikes
             drawLineSegment(canvasCtx, x, height, widthSample, (i + 1) % 2);
@@ -261,27 +265,25 @@ const drawLineSegment = (ctx, x, y, width, isEven) => {
 
 recordedAudioBtn.addEventListener('click', () => {
     const audio = new Audio(audioUrl);
-    setupCanvas2()
-    widthContain2 = 0
-    let jsondata = [...data]
-    clearInterval(intervalId2)
-    let count = 0;
-   intervalId2 = setInterval(() => {
-    if (widthContain2 < canvas.offsetWidth-0.1) {
-        const normalizedData = normalizeData2(jsondata.splice(0,9)); // Normalize the current chunko
-        // const normalizedData = normalizeData2([jsondata[count]]); // Normalize the current chunko
-        // console.log(data.toSpliced(count, count + 99));
-        draw2(normalizedData);
-        console.log(count);
-        count++;
-    } else {
-        widthContain2= 0
-        clearInterval(intervalId2)
-    }
+//     setupCanvas2()
+//     widthContain2 = 0
+//     let jsondata = [...data]
+//     clearInterval(intervalId2)
+//     let count = 0;
+//    intervalId2 = setInterval(() => {
+//     if (widthContain2 < canvas.offsetWidth-0.1) {
+//         const normalizedData = normalizeData2(jsondata.splice(0,9)); // Normalize the current chunko
+//         // const normalizedData = normalizeData2([jsondata[count]]); // Normalize the current chunko
+//         // console.log(data.toSpliced(count, count + 99));
+//         draw2(normalizedData);
+//         console.log(count);
+//         count++;
+//     } else {
+//         widthContain2= 0
+//         clearInterval(intervalId2)
+//     }
        
-}, intervalTime2);
-    audioPlayer.play()
+// }, intervalTime2);
+    audio.play()
 })
-originalAudioBtn.addEventListener('click', () => {
-    
-})
+

@@ -35,7 +35,7 @@
         <p>Audio</p>
         <!-- <button id="startButton">Start Recording</button> -->
 
-        <input id="audio" type="file" />
+        <!-- <input id="audio" type="file" / -->
         <div style="display: flex; gap: 10px; width: 100%; flex-direction: column;">
           <input placeholder="time" type="number" id="time" />
           <canvas style="width: 500px; height: 100px" id="canvas"></canvas>
@@ -43,14 +43,13 @@
           <canvas style="width: 500px; height: 100px" id="canvas2"></canvas>
         </div>
         <div>
-          <audio id="original-audio" src="./1.mp3"></audio>
+          <audio id="original-audio" src="./1 (1).mp3"></audio>
           <button id="originalAudio">Play original</button>
-          <audio id="recorded-audio" src="./1.mp3"></audio>
+          <audio id="recorded-audio"></audio>
           <button id="recordedAudio">Play recorded</button>
         </div>
         <button id="startButton">Start Recording</button>
         <button id="stopButton">Stop Recording</button>
-        <audio id="audioPlayback" controls></audio>
       </div>
       
     <script src="./script.js"></script>
