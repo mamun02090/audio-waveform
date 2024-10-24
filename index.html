@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        padding: 20px;
+        width: 100%;
+        max-width: 860px;
+        margin: auto;
+        min-height: 500px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        align-items: center;
+        justify-content: center;
+        background-color: aliceblue;
+      }
+      .div {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+    </style>
+    <title>Audio</title>
+  </head>
+  <body>
+    <div class="container">
+      <div class="div">
+        <p>Audio</p>
+        <!-- <button id="startButton">Start Recording</button> -->
+
+        <input id="audio" type="file" />
+        <div style="display: flex; gap: 10px; width: 100%; flex-direction: column;">
+          <input placeholder="time" type="number" id="time" />
+          <canvas style="width: 500px; height: 100px" id="canvas"></canvas>
+          <span>Time: </span><span id="timer"> 0</span>
+          <canvas style="width: 500px; height: 100px" id="canvas2"></canvas>
+        </div>
+        <div>
+          <audio id="original-audio" src="./1.mp3"></audio>
+          <button id="originalAudio">Play original</button>
+          <audio id="recorded-audio" src="./1.mp3"></audio>
+          <button id="recordedAudio">Play recorded</button>
+        </div>
+        <button id="startButton">Start Recording</button>
+        <button id="stopButton">Stop Recording</button>
+        <audio id="audioPlayback" controls></audio>
+      </div>
+      
+    <script src="./script.js"></script>
+    <script src="./jsonTest.js"></script>
+    <!-- <script src="./test.js"></script> -->
+    <!-- <script src="./audioFile.js"></script> -->
+  </body>
+</html>
