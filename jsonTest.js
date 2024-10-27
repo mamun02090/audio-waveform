@@ -27,40 +27,14 @@ let widthContain2 = 0
 let intervalId2;
 const voiceThreshold = 10
 
-
-const audioPlayer = document.getElementById('original-audio')
-
-
-
-const originalAudioBtn = document.getElementById('originalAudio')
-
-originalAudioBtn.addEventListener('click', () => {
-    setupCanvas2()
-    widthContain2 = 0
-    let jsondata = [...data]
-    clearInterval(intervalId2)
-    let count = 0;
-   intervalId2 = setInterval(() => {
-    if (widthContain2 < canvas.offsetWidth-0.1) {
-        const normalizedData = normalizeAndCalcHeight(jsondata.splice(0,9)); // Normalize the current chunko
-        // const normalizedData = normalizeAndCalcHeight([jsondata[count]]); // Normalize the current chunko
-        // console.log(data.toSpliced(count, count + 99));
-        draw2(normalizedData);
-        count++;
-    } else {
-        widthContain2= 0
-        clearInterval(intervalId2)
-    }
-       
-}, intervalTime2);
-    audioPlayer.play()
-})
-
-
 const samples2 = 10;
 
 // // equation to calculate the widthPerSample to match the time2
 let widthSamplingRate2 = (intervalTime2 * canVas2Width) / (samples2 * time2 * 1000)
+
+const maxAmplitude = Math.max(...data);
+
+
 // Normalize the filtered data, but avoid normalizing to very low amplitudes
 const normalizeAndCalcHeight = (filteredData) => {
     if (maxAmplitude === 0) return filteredData; // If everything is 0, don't normalize
@@ -68,11 +42,12 @@ const normalizeAndCalcHeight = (filteredData) => {
     const multiplier = 1 / maxAmplitude;
     return filteredData.map(n => n * multiplier*canvas2Height*0.5);
 };
-const maxAmplitude = Math.max(...data);
+
 const heightOfSpikes = normalizeAndCalcHeight(data)
+
+const audioPlayer = document.getElementById('original-audio')
+
 const dataToBeRendered = [...heightOfSpikes]
-
-
 //trim and add the silence
 const removeAndAddSilence = () => {
     const initialVoiceIndex = heightOfSpikes.findIndex(item => item > voiceThreshold);
@@ -104,6 +79,37 @@ const removeAndAddSilence = () => {
 }
 removeAndAddSilence()
 
+
+
+const originalAudioBtn = document.getElementById('originalAudio')
+let isReplay = false
+originalAudioBtn.addEventListener('click', () => {
+    setupCanvas2()
+    widthContain2 = 0
+    let jsondata = [...dataToBeRendered]
+    clearInterval(intervalId2)
+    let count = 0;
+   intervalId2 = setInterval(() => {
+       if (widthContain2 < canvas.offsetWidth - 0.1) {
+        isReplay = true
+        // const normalizedData = normalizeAndCalcHeight(jsondata.splice(0,9)); // Normalize the current chunko
+        // const normalizedData = normalizeAndCalcHeight([jsondata[count]]); // Normalize the current chunko
+        // console.log(data.toSpliced(count, count + 99));
+        draw2(jsondata.splice(0,9));
+        count++;
+        console.log(count);
+    } else {
+        console.log(widthContain2);
+        widthContain2 = 0
+        console.log('off');
+        clearInterval(intervalId2)
+    }
+       
+}, intervalTime2);
+    audioPlayer.play()
+})
+
+
 function setupCanvas2() {
     canvas2 = document.getElementById('canvas2');
     canvas2Ctx = canvas2.getContext('2d');
@@ -126,7 +132,7 @@ let isVoice = true
 const draw2 = (normalizedData) => {
     const canvas2Width = canvas2.offsetWidth;
     const canvas2Height = canvas2.height;
-    const widthSample = (canvas2Width) / normalizedData.length;
+    let widthSample = (canvas2Width) / heightOfSpikes.length;
     // Don't clear the canvas2 so previous data remains
     // Draw2 each sample segment like before
     for (let i = 0; i < normalizedData.length; i++) {
@@ -142,7 +148,7 @@ const draw2 = (normalizedData) => {
         // }
         if (isVoice) {
             draw2LineSegment2(canvas2Ctx, x, height, widthSample, (i + 1) % 2);
-            draw2LineSegment2(canvas2Ctx, x, height, widthSample);
+            // draw2LineSegment2(canvas2Ctx, x, height, widthSample);
             xPos2 += widthSamplingRate2; // Move to the next x position
         }
             // Use the same draw2LineSegment2 approach for the spikes
