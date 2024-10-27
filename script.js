@@ -36,7 +36,7 @@ document.getElementById('stopButton').disabled = true;
 // console.log(data.length)
 
 // // equation to calculate the widthPerSample to match the time
-let widthSamplingRate = (intervalTime * canVasWidth) / (samples * time * 1000)
+let widthSamplingRate = (intervalTime * canVasWidth) / (samples * (time * 1000+200))
 
 // intervalId = setInterval(() => {
 //     if (widthContain < canvas.offsetWidth) {
@@ -113,12 +113,13 @@ document.getElementById('startButton').addEventListener('click', async () => {
     }
     // Start logging and drawing the waveform every 100ms
     intervalId = setInterval(() => {
-        if (isRecording && widthContain < canvas.offsetWidth) {
+        if (isRecording && widthContain < canvas.offsetWidth-100*widthSamplingRate) {
             analyser.getFloatTimeDomainData(dataArray); // Get live audio data
             const filteredData = filterData(dataArray);
             const normalizedData = normalizeData(filteredData); // Normalize the current chunk
             draw(normalizedData);
         } else {
+            draw(Array.from({length:100}, ()=> 0))
             isRecording = false;
             isTalk = false;
             widthContain = 0
@@ -167,7 +168,6 @@ document.getElementById('stopButton').addEventListener('click', () => {
 // Filter the data into samples and average blocks, applying a silence threshold
 const filterData = (audioData) => {
     const blockSize = Math.floor(audioData.length / samples); // Number of samples in each subdivision
-    console.log(audioData.length, 'block')
     const filteredData = [];
 
     for (let i = 0; i < samples; i++) {
@@ -210,8 +210,10 @@ const draw = (normalizedData) => {
             return; // Stop if the canvas width is reached
         }
 
-        if (normalizedData[i] > 0) {
+        if (normalizedData[i] > 0 && !isTalk) {
             isTalk = true
+            const zeroArray = Array.from({length: 100}, () => 0)
+            normalizedData.splice(0, 0, ...zeroArray)
         }
 
         if (isTalk) {
@@ -231,7 +233,6 @@ const draw = (normalizedData) => {
 let count = 0;
 // Function to draw a line segment in the waveform (spike-like visualization) with Y-axis centered
 const drawLineSegment = (ctx, x, y, width, isEven) => {
-    console.log(count++)
     ctx.lineWidth = 1; // how thick the line is
     ctx.strokeStyle = "blue"; // what color our line is
     ctx.fillStyle = "blue"
