@@ -22,7 +22,8 @@ const intervalTime = 10;
 const timeInput = document.getElementById('time')
 const timer = document.getElementById('timer')
 timeInput.value = 2.960;
-let time = timeInput.value;
+let time = Number(timeInput.value);
+time = time+time*0.1
 let widthContain = 0
 let audioUrl
 let isTalk = false
@@ -31,12 +32,10 @@ const audioPlayerRecorded = document.getElementById('recorded-audio')
 recordedAudioBtn.disabled = true
 
 document.getElementById('stopButton').disabled = true;
-// const data = [131, 166, 191, 143, 172, 152, 198, 120, 135, 145, 159, 124, 116, 143, 166, 158, 113, 146, 133, 123, 117, 140, 121, 109, 190, 111, 122, 244, 271, 325, 432, 388, 176, 199, 155, 170, 156, 208, 182, 151, 125, 201, 438, 767, 868, 869, 757, 645, 609, 588, 627, 435, 481, 570, 363, 246, 210, 171, 122, 150, 127, 133, 163, 240, 417, 463, 474, 593, 507, 418, 275, 251, 346, 355, 280, 299, 257, 357, 469, 428, 406, 326, 369, 279, 242, 139, 127, 133, 187, 159, 148, 141, 479, 503, 551, 873, 682, 601, 510, 384, 493, 443, 370, 261, 263, 282, 259, 204, 229, 199, 208, 204, 195, 253, 236, 224, 218, 232, 326, 360, 385, 438, 467, 402, 408, 535, 491, 415, 445, 490, 441, 527, 527, 544, 515, 443, 538, 410, 372, 412, 429, 342, 354, 351, 405, 420, 467, 425, 428, 521, 646, 914, 648, 548, 434, 404, 428, 314, 334, 365, 308, 328, 177, 216, 163, 183, 162, 209, 153, 191, 182, 175, 162, 177, 147, 139, 140, 121, 139, 116, 158, 144, 119, 180, 137, 140, 148, 133, 148, 149, 147, 178, 173, 151, 175, 181, 172, 168, 164, 161, 168, 213, 145, 199, 182, 167, 194, 178, 126, 167, 155, 167, 141, 171, 157, 144, 71]
-
-// console.log(data.length)
 
 // // equation to calculate the widthPerSample to match the time
-let widthSamplingRate = (intervalTime * canVasWidth) / (samples * (time * 1000+200))
+let widthSamplingRate = (intervalTime * canVasWidth) / (samples * (time * 1000 + 200))
+console.log(canVasWidth, samples, time);
 
 // intervalId = setInterval(() => {
 //     if (widthContain < canvas.offsetWidth) {
@@ -107,22 +106,23 @@ document.getElementById('startButton').addEventListener('click', async () => {
 
     mediaRecorder.onstop=() => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioUrl = URL.createObjectURL(audioBlob);
-        
+        audioUrl = URL.createObjectURL(audioBlob);   
         audioChunks = []
     }
     // Start logging and drawing the waveform every 100ms
     intervalId = setInterval(() => {
-        if (isRecording && widthContain < canvas.offsetWidth-100*widthSamplingRate) {
+        if (isRecording && widthContain < canvas.offsetWidth - 100 * widthSamplingRate) {
+            console.log('start');
             analyser.getFloatTimeDomainData(dataArray); // Get live audio data
             const filteredData = filterData(dataArray);
             const normalizedData = normalizeData(filteredData); // Normalize the current chunk
             draw(normalizedData);
         } else {
+            console.log('stopped',widthContain,   canvas.offsetWidth , widthSamplingRate);
             draw(Array.from({length:100}, ()=> 0))
             isRecording = false;
             isTalk = false;
-            widthContain = 0
+            widthContain = 0;
             clearInterval(recordingTimerId)
             clearInterval(intervalId)
             nTime = Date.now();
@@ -177,17 +177,18 @@ const filterData = (audioData) => {
             sum += Math.abs(audioData[blockStart + j]); // find the sum of all the samples in the block
         }
         const average = sum / blockSize;
+        console.log( average, 'b');
 
         // Apply the silence threshold to filter out low-level noise
-        filteredData.push(average < silenceThreshold ? 0 : average);
+        filteredData.push(average < silenceThreshold ? 0 : average*32767);
     }
-
-    return filteredData;
+    return filteredData;  
 };
 
 // Normalize the filtered data, but avoid normalizing to very low amplitudes
 const normalizeData = (filteredData) => {
-    const maxAmplitude = Math.max(...filteredData);
+    // const maxAmplitude = Math.max(...filteredData);
+    console.log(maxAmplitude, filteredData);
     if (maxAmplitude === 0) return filteredData; // If everything is 0, don't normalize
 
     const multiplier = 1 / maxAmplitude;
@@ -198,8 +199,8 @@ const normalizeData = (filteredData) => {
 const draw = (normalizedData) => {
     const canvasWidth = canvas.offsetWidth;
     const canvasHeight = canvas.height;
-    const widthSample = (canvasWidth) / 2040;
-
+    const widthSample = (canvasWidth) / (time*1000);
+    
 
 
     // Don't clear the canvas so previous data remains
@@ -214,6 +215,9 @@ const draw = (normalizedData) => {
             isTalk = true
             const zeroArray = Array.from({length: 100}, () => 0)
             normalizedData.splice(0, 0, ...zeroArray)
+        }
+        if (!isTalk) {
+            return
         }
 
         if (isTalk) {
