@@ -27,6 +27,8 @@
         gap: 10px;
       }
     </style>
+    <script src="node_modules/@picovoice/cobra-web/dist/iife/index.js"></script>
+    <script src="node_modules/@picovoice/web-voice-processor/dist/iife/index.js"></script>
     <title>Audio</title>
   </head>
   <body>
@@ -48,6 +50,7 @@
           <audio id="recorded-audio"></audio>
           <button id="recordedAudio">Play recorded</button>
         </div>
+        <p id="probability"></p>
         <button id="startButton">Start Recording</button>
         <button id="stopButton">Stop Recording</button>
       </div>
@@ -55,6 +58,23 @@
     <script src="./script.js"></script>
     <script src="./jsonTest.js"></script>
     <script src="./test.js"></script>
+
     <!-- <script src="./audioFile.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.19.2/dist/ort.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.19/dist/bundle.min.js"></script>
+<script>
+  async function main() {
+    const myvad = await vad.MicVAD.new({
+      onSpeechStart: () => {
+        console.log("Speech start detected")
+      },
+      onSpeechEnd: (audio) => {
+        // do something with `audio` (Float32Array of audio samples at sample rate 16000)...
+      }
+    })
+    myvad.start()
+  }
+  main()
+</script>
   </body>
 </html>

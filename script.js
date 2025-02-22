@@ -52,8 +52,38 @@ console.log(canVasWidth, samples, time);
 //         timer.innerHTML = nTime - cTime
 //     }
 // }, intervalTime);
+
+//setup cobra
+let voiceProbailityScore = 0
+const  probability = document.getElementById("probability")
+let cobra = null
+    
+      async function initCobra() {
+        cobra = await CobraWeb.CobraWorker.create(
+          "xUcmUMnK/Zj/cYSL/82F2ybwv9AgA09m9Xe1gSZrQqXdtGi7Ls17tA==", //console key
+          voiceProbabilityCallback
+        )
+      }
+function voiceProbabilityCallback(voiceProbability) {
+    // console.log(voiceProbability);
+    voiceProbailityScore = voiceProbability
+    probability.innerText = voiceProbability
+  }
+
+  async function startCobra() {
+    if (!cobra) {
+      await initCobra()
+    }
+    
+    await WebVoiceProcessor.WebVoiceProcessor.subscribe(cobra)
+  }
+
+  async function stopCobra() {
+    await WebVoiceProcessor.WebVoiceProcessor.unsubscribe(cobra)
+  }
 // Set up the canvas
 function setupCanvas() {
+    
     canvas = document.getElementById('canvas');
     canvasCtx = canvas.getContext('2d');
     canvasCtx.clearRect(0, 0, canvas.offsetWidth, canvas.height);
@@ -79,6 +109,7 @@ let nTime
 let mediaRecorder
 // Capture audio and start logging
 document.getElementById('startButton').addEventListener('click', async () => {
+    startCobra()
     isRecording = true;
     let audioChunks = []
     recordingTime = 0
@@ -106,7 +137,8 @@ document.getElementById('startButton').addEventListener('click', async () => {
 
     mediaRecorder.onstop=() => {
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        audioUrl = URL.createObjectURL(audioBlob);   
+        audioUrl = URL.createObjectURL(audioBlob);
+        console.log(audioUrl);
         audioChunks = []
     }
     // Start logging and drawing the waveform every 100ms
@@ -118,7 +150,6 @@ document.getElementById('startButton').addEventListener('click', async () => {
             const normalizedData = normalizeData(filteredData); // Normalize the current chunk
             draw(normalizedData);
         } else {
-            console.log('stopped',widthContain,   canvas.offsetWidth , widthSamplingRate);
             draw(Array.from({length:100}, ()=> 0))
             isRecording = false;
             isTalk = false;
@@ -177,7 +208,6 @@ const filterData = (audioData) => {
             sum += Math.abs(audioData[blockStart + j]); // find the sum of all the samples in the block
         }
         const average = sum / blockSize;
-        console.log( average, 'b');
 
         // Apply the silence threshold to filter out low-level noise
         filteredData.push(average < silenceThreshold ? 0 : average*32767);
@@ -188,7 +218,7 @@ const filterData = (audioData) => {
 // Normalize the filtered data, but avoid normalizing to very low amplitudes
 const normalizeData = (filteredData) => {
     // const maxAmplitude = Math.max(...filteredData);
-    console.log(maxAmplitude, filteredData);
+    // console.log(maxAmplitude, filteredData);
     if (maxAmplitude === 0) return filteredData; // If everything is 0, don't normalize
 
     const multiplier = 1 / maxAmplitude;
@@ -211,7 +241,7 @@ const draw = (normalizedData) => {
             return; // Stop if the canvas width is reached
         }
 
-        if (normalizedData[i] > 0 && !isTalk) {
+        if (voiceProbailityScore > 0.1 && !isTalk) {
             isTalk = true
             const zeroArray = Array.from({length: 100}, () => 0)
             normalizedData.splice(0, 0, ...zeroArray)
@@ -260,6 +290,7 @@ const drawLineSegment = (ctx, x, y, width, isEven) => {
     // ctx.lineTo(x, x + width)
     // ctx.stroke();
     ctx.fill()
+    ctx.stroke()
 };
 
 // audio play
@@ -270,6 +301,7 @@ const drawLineSegment = (ctx, x, y, width, isEven) => {
 
 recordedAudioBtn.addEventListener('click', () => {
     const audio = new Audio(audioUrl);
+   
 //     setupCanvas2()
 //     widthContain2 = 0
 //     let jsondata = [...data]

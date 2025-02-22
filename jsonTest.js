@@ -182,6 +182,7 @@ const draw2LineSegment2 = (ctx, x, y, width) => {
         ctx.lineTo(x, centerY - y); // Draw2 a line up or down from the center
         ctx.lineTo(x + width, centerY); // End at the center again 
         ctx.fill();
+        ctx.stroke()
     }
     // ctx.lineTo(x, x + width)
     // ctx.stroke();

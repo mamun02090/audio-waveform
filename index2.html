@@ -1,0 +1,177 @@
+<script>
+  import { onMount } from "svelte";
+  import { data } from "$lib/constants";
+
+  let canvasElement;
+  let canvasContext;
+  let markerPosition = 0; // Marker position in px
+  const waveformWidth = data.length; // Total width of the waveform in px
+  const visibleWidth = 400; // Visible width of the container in px
+  const duration = data.length / 1000; // Total duration in seconds
+  const barWidth = 2; // Width of each bar in px
+  const gapWidth = 1; // Gap between bars in px
+  const speed = waveformWidth / duration; // Speed in px/sec (real-time sync)
+  let scrollOffset = 0; // Horizontal scroll offset
+  let isPlaying = false;
+  let animationFrame;
+  let isDragging = false; // Tracks if the mouse is being dragged
+  let startX = 0; // Starting x-coordinate during drag
+  let startScrollOffset = 0; // Initial scroll offset during drag
+
+  function drawWaveform() {
+    const canvasHeight = canvasElement.height;
+    const centerY = canvasHeight / 2;
+
+    canvasContext.clearRect(0, 0, visibleWidth, canvasHeight);
+
+    let barX = -scrollOffset;
+    for (let i = 0; i < data.length; i++) {
+      const barHeight = data[i] * canvasHeight * 0.5;
+
+      canvasContext.fillStyle = "rgba(0, 150, 255, 0.8)";
+      canvasContext.fillRect(
+        barX,
+        centerY - barHeight,
+        barWidth,
+        barHeight * 2
+      );
+
+      barX += barWidth + gapWidth;
+    }
+
+    // Draw the marker
+    canvasContext.strokeStyle = "red";
+    canvasContext.lineWidth = 2;
+    canvasContext.beginPath();
+    canvasContext.moveTo(
+      markerPosition < 0.75 * visibleWidth
+        ? markerPosition // Move marker normally at first
+        : 0.75 * visibleWidth, // Fix marker at 75% after scrolling starts
+      0
+    );
+    canvasContext.lineTo(
+      markerPosition < 0.75 * visibleWidth
+        ? markerPosition
+        : 0.75 * visibleWidth,
+      canvasHeight
+    );
+    canvasContext.stroke();
+  }
+
+  function startMarkerMovement() {
+    isPlaying = true;
+    const startTime = performance.now();
+
+    function animateMarker(timestamp) {
+      if (isDragging) return; // Pause marker movement while dragging
+
+      const elapsedTime = (timestamp - startTime) / 1000; // Elapsed time in seconds
+      markerPosition = elapsedTime * speed; // Update marker position
+
+      // Start scrolling when the marker reaches 75% of the visible width
+      if (
+        markerPosition > 0.75 * visibleWidth &&
+        scrollOffset + visibleWidth < waveformWidth
+      ) {
+        scrollOffset = markerPosition - 0.75 * visibleWidth;
+        scrollOffset = Math.min(scrollOffset, waveformWidth - visibleWidth); // Prevent overscrolling
+      }
+
+      // Stop at the end
+      if (markerPosition >= waveformWidth) {
+        markerPosition = waveformWidth; // Keep marker at the end
+        isPlaying = false; // Stop the animation
+        cancelAnimationFrame(animationFrame);
+      }
+
+      drawWaveform();
+      if (isPlaying) {
+        animationFrame = requestAnimationFrame(animateMarker);
+      }
+    }
+
+    animationFrame = requestAnimationFrame(animateMarker);
+  }
+
+  function handleMouseDown(event) {
+    isDragging = true;
+    startX = event.clientX;
+    startScrollOffset = scrollOffset;
+    cancelAnimationFrame(animationFrame); // Pause marker movement
+  }
+
+  function handleMouseMove(event) {
+    if (isDragging) {
+      const deltaX = startX - event.clientX;
+      scrollOffset = Math.min(
+        Math.max(startScrollOffset + deltaX, 0),
+        waveformWidth - visibleWidth
+      ); // Clamp scrollOffset
+      drawWaveform();
+    }
+  }
+
+  function handleMouseUp() {
+    if (isDragging) {
+      isDragging = false;
+      if (isPlaying) {
+        startMarkerMovement(); // Resume marker movement after dragging
+      }
+    }
+  }
+
+  onMount(() => {
+    canvasElement = document.getElementById("waveform");
+    canvasContext = canvasElement.getContext("2d");
+
+    canvasElement.width = visibleWidth;
+    canvasElement.height = 100;
+
+    drawWaveform();
+  });
+</script>
+
+<div>
+  <button on:click="{startMarkerMovement}" disabled="{isPlaying}">Start</button>
+  <div
+    class="waveform-container"
+    on:mousedown="{handleMouseDown}"
+    on:mousemove="{handleMouseMove}"
+    on:mouseup="{handleMouseUp}"
+    on:mouseleave="{handleMouseUp}"
+    <!--
+    Stop
+    dragging
+    if
+    the
+    mouse
+    leaves
+    the
+    container
+    --
+  >
+    >
+    <canvas id="waveform"></canvas>
+  </div>
+</div>
+
+<style>
+  .waveform-container {
+    width: 400px;
+    height: 100px;
+    margin: 0 auto; /* Center align the waveform */
+    overflow: hidden; /* Clip overflowing content */
+    border: 1px solid #ccc;
+    position: relative;
+    cursor: grab;
+  }
+
+  .waveform-container:active {
+    cursor: grabbing;
+  }
+
+  canvas {
+    display: block;
+    position: absolute;
+  }
+</style>
